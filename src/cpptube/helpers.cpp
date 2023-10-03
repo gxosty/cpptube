@@ -1,5 +1,7 @@
 #include <cpptube/helpers.hpp>
+#include <cpptube/exceptions.hpp>
 #include <regex>
+#include <iostream>
 #include <curl/curl.h>
 
 namespace cpptube::helpers
@@ -10,6 +12,10 @@ namespace cpptube::helpers
 		std::smatch matches;
 
 		std::regex_search(str, matches, regex_pattern);
+
+		if (matches.empty())
+			throw cpptube::exceptions::RegexMatchError("helpers", pattern);
+
 		return matches[group].str();
 	}
 
@@ -46,5 +52,39 @@ namespace cpptube::helpers
 		}
 
 		return url_encode(query_str);
+	}
+
+	nlohmann::json parse_qs(const std::string& qs)
+	{
+		static std::regex qs_pattern("^&?([^=&]+)=([^&]+)");
+		const char* str = qs.c_str();
+		size_t size = qs.size();
+		uintptr_t pos = 0;
+		nlohmann::json results{};
+
+		while (pos < size)
+		{
+			std::cmatch matches;
+			std::regex_search(str + pos, matches, qs_pattern);
+
+			if (!matches.empty())
+			{
+				if (results.contains(matches[1].str()))
+				{
+					results[matches[1].str()].push_back(matches[2].str());
+				}
+				else
+				{
+					results[matches[1].str()] = {matches[2].str()};
+				}
+				pos += matches.length();
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		return results;
 	}
 }

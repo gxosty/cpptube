@@ -32,4 +32,6 @@ namespace cpptube::request
 		long timeout = 10,
 		long retries = 3
 	);
+
+	std::string get(const std::string& url);
 }

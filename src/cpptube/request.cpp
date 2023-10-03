@@ -120,4 +120,9 @@ namespace cpptube::request
 		__execute_request(__write_function, (void*)&response_data, url, method, headers, data, timeout, retries);
 		return response_data;
 	}
+
+	std::string get(const std::string& url)
+	{
+		return "";
+	}
 }

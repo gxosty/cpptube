@@ -1,5 +1,7 @@
 #include <cpptube/cpptube.hpp>
+#include <cpptube/helpers.hpp>
 #include <cpptube/innertube.hpp>
+#include <cpptube/exceptions.hpp>
 #include <iostream>
 #include <fstream>
 
@@ -9,10 +11,7 @@ int main(int argc, char** argv)
 	// cpptube::stream::StreamQuery streams = yt.streams();
 	// std::cout << streams->first() << std::endl;
 
-	innertube::InnerTube it;
-	std::ofstream file("test.json");
-	file << std::setw(4) << it.player(yt.video_id) << std::endl;
-	file.close();
+	std::cout << cpptube::helpers::parse_qs("foo=bar&hello=world&you=i123") << std::endl;
 
 	return 0;
 }

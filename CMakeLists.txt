@@ -22,6 +22,7 @@ add_library(${CPPTUBE_SHARED_LIB_NAME} SHARED
 	src/cpptube/extract.cpp
 	src/cpptube/helpers.cpp
 	src/cpptube/innertube.cpp
+	src/cpptube/exceptions.cpp
 )
 
 target_link_libraries(${CPPTUBE_SHARED_LIB_NAME}
