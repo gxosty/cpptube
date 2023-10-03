@@ -18,14 +18,12 @@ namespace cpptube
 		);
 	}
 
-	
-
 	std::vector<cpptube::streams::Stream>* YouTube::fmt_streams()
 	{
-		if (!this->fmt_streams.empty())
+		if (!this->__fmt_streams.empty())
 			return &this->__fmt_streams;
 
-
+		return nullptr;
 	}
 
 	cpptube::query::StreamQuery YouTube::streams()
