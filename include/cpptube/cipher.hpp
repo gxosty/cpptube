@@ -4,7 +4,6 @@
 #include <nlohmann/json.hpp>
 
 #include <string>
-#include <vector>
 #include <pair>
 
 namespace cpptube::cipher
@@ -14,9 +13,8 @@ namespace cpptube::cipher
 	class Cipher
 	{
 	private:
-		std::vector<std::string> __transform_plan;
+		nlohmann::json __transform_plan;
 
-		// std::vector<std::vector<std::string>> __throttling_plan;
 		nlohmann::json __throttling_plan;
 		nlohmann::json __throttling_array;
 
@@ -31,8 +29,8 @@ namespace cpptube::cipher
 	}
 
 	std::string get_initial_function_name(const std::string& str);
-	std::vector<std::string> get_transform_plan(const std::string& js);
-	std::vector<std::string> get_transform_object(const std::string& js, const std::string& var);
+	nlohmann::json get_transform_plan(const std::string& js);
+	nlohmann::json get_transform_object(const std::string& js, const std::string& var);
 	nlohmann::json get_transform_map(const std::string& js, const std::string& var);
 	std::string get_throttling_function_name(const std::string& js);
 	std::string get_throttling_function_code(const std::string& js);
