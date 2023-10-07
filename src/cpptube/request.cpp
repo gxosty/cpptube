@@ -1,4 +1,5 @@
 #include <cpptube/request.hpp>
+#include <cpptube/logger.hpp>
 #include <curl/curl.h>
 
 #include <mutex>
@@ -7,6 +8,7 @@
 
 namespace cpptube::request
 {
+	cpptube::logger::Logger logger(__FILE__);
 	std::mutex __request_mutex;
 
 	CURL* __curl = nullptr;
@@ -33,6 +35,17 @@ namespace cpptube::request
 			url = std::regex_replace(url, youtube_pattern, "www.google.com");
 			headers = curl_slist_append(headers, "Host: www.youtube.com");
 		}
+	}
+
+	bool __check_status(CURLcode curle_code, int status_code)
+	{
+		if ((curle_code != CURLE_OK) || ((status_code < 200) || (status_code >= 300)))
+		{
+			logger.warning() << "Request wasn't successful" << std::endl;
+			logger.warning() << "CURLcode == " << (int)curle_code << std::endl;
+			logger.warning() << "status_code == " << status_code << std::endl;
+		}
+		return curle_code != CURLE_OK;
 	}
 
 	size_t __write_function(void* data, size_t size, size_t nmemb, void* userp)
@@ -99,11 +112,14 @@ namespace cpptube::request
 		}
 
 		curl_easy_setopt(__curl, CURLOPT_TIMEOUT, timeout);
-		CURLcode curle_code;
+		CURLcode curle_code = CURLE_OK;
+		int status_code = 0;
 
 		do {
+			logger.debug() << "Requesting url: " << url << std::endl;
 			curle_code = curl_easy_perform(__curl);
-		} while ((curle_code != CURLE_OK) && ((--retries) > 0));
+			curl_easy_getinfo(__curl, CURLINFO_RESPONSE_CODE, &status_code);
+		} while ((__check_status(curle_code, status_code)) && ((--retries) > 0));
 
 		__request_mutex.unlock();
 	}
@@ -121,8 +137,10 @@ namespace cpptube::request
 		return response_data;
 	}
 
-	std::string get(const std::string& url)
+	std::string get(const std::string& url, nlohmann::json headers, long timeout)
 	{
-		return "";
+		std::string response_data;
+		__execute_request(__write_function, (void*)&response_data, url, METHOD_GET, headers, nullptr, timeout);
+		return response_data;
 	}
 }

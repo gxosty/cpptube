@@ -33,5 +33,5 @@ namespace cpptube::request
 		long retries = 3
 	);
 
-	std::string get(const std::string& url);
+	std::string get(const std::string& url, nlohmann::json headers = {}, long timeout = 10);
 }

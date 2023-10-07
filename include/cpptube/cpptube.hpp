@@ -4,6 +4,7 @@
 #include <cpptube/streams.hpp>
 #include <cpptube/monostate.hpp>
 #include <cpptube/query.hpp>
+#include <cpptube/logger.hpp>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
@@ -12,6 +13,8 @@ namespace cpptube
 {
 	extern std::string __js__;
 	extern std::string __js_url__;
+
+	extern void set_logger_level(unsigned level);
 
 	class YouTube
 	{

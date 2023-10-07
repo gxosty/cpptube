@@ -19,14 +19,13 @@ namespace cpptube::helpers
 		return matches[group].str();
 	}
 
-	std::string url_encode(const std::string& url)
+	std::string url_encode(const std::string& str)
 	{
-		// char* encoded_url = curl_escape(url.c_str(), url.size());
+		char* encoded_str = curl_escape(str.c_str(), str.size());
 		// TODO: throw exception if `encoded_url` is :nullptr:
-		// return std::string(encoded_url);
-
-		// seems like it doesn't work how we wanted...
-		return url;
+		std::string estr = std::string(encoded_str);
+		free(encoded_str);
+		return estr
 	}
 
 	std::string url_encode(const nlohmann::json& query)
@@ -39,19 +38,19 @@ namespace cpptube::helpers
 			{
 				query_str += "&";
 			}
-			query_str += item.key() + "=";
+			query_str += url_encode(item.key()) + "=";
 
 			if (item.value().is_string())
 			{
-				query_str += item.value().get<std::string>();
+				query_str += url_encode(item.value().get<std::string>());
 			}
 			else
 			{
-				query_str += item.value().dump();
+				query_str += url_encode(item.value().dump());
 			}
 		}
 
-		return url_encode(query_str);
+		return query_str;
 	}
 
 	nlohmann::json parse_qs(const std::string& qs)
@@ -59,8 +58,17 @@ namespace cpptube::helpers
 		static std::regex qs_pattern("^&?([^=&]+)=([^&]+)");
 		const char* str = qs.c_str();
 		size_t size = qs.size();
-		uintptr_t pos = 0;
+		uintptr_t pos = (uintptr_t)qs.find("?");
 		nlohmann::json results{};
+
+		if (pos == (uintptr_t)std::string::npos)
+		{
+			pos = 0;
+		}
+		else
+		{
+			pos++;
+		}
 
 		while (pos < size)
 		{

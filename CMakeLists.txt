@@ -19,10 +19,13 @@ add_library(${CPPTUBE_SHARED_LIB_NAME} SHARED
 	src/cpptube/monostate.cpp
 	src/cpptube/request.cpp
 	src/cpptube/query.cpp
+	src/cpptube/cipher.cpp
 	src/cpptube/extract.cpp
+	src/cpptube/parser.cpp
 	src/cpptube/helpers.cpp
 	src/cpptube/innertube.cpp
 	src/cpptube/exceptions.cpp
+	src/cpptube/logger.cpp
 )
 
 target_link_libraries(${CPPTUBE_SHARED_LIB_NAME}

@@ -12,6 +12,11 @@ namespace cpptube
 	std::string __js__ = "";
 	std::string __js_url__ = "";
 
+	void set_logger_level(unsigned level)
+	{
+		cpptube::logger::Logger::set_level(level);
+	}
+
 	YouTube::YouTube(
 		std::string url,
 		void(*on_progress_callback)(cpptube::streams::Stream* stream, void* buffer, size_t buffer_size, long bytes_remaining),
@@ -33,7 +38,11 @@ namespace cpptube
 
 	std::string* YouTube::watch_html()
 	{
-		return nullptr;
+		if (!this->__watch_html.empty())
+			return &this->__watch_html;
+
+		this->__watch_html = cpptube::request::get(this->watch_url);
+		return &this->__watch_html;
 	}
 
 	std::string* YouTube::js_url()
@@ -143,11 +152,24 @@ namespace cpptube
 
 	std::string* YouTube::title()
 	{
-		return nullptr;
+		if (!this->__title.empty())
+			return &this->__title;
+
+		try {
+			this->__title = this->vid_info()[0]["videoDetails"]["title"].get<std::string>();
+		} catch (...) {
+			throw cpptube::exceptions::CpptubeError("exception occured while accessing title of " + this->watch_url);
+		}
+
+		return &this->__title;
 	}
 
 	unsigned YouTube::length()
 	{
+		try {
+			return (unsigned)std::stoi(this->vid_info()[0]["videoDetails"]["lengthSeconds"].get<std::string>());
+		} catch (...) {}
+
 		return 0;
 	}
 }

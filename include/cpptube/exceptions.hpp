@@ -10,11 +10,21 @@ namespace cpptube::exceptions
 	protected:
 		std::string error_msg = "An error occured";
 	public:
+		CpptubeError() = default;
+		CpptubeError(const std::string& error_msg);
+
 		const char* what();
 	};
 
 	class MaxRetriesExceededError : public CpptubeError {};
-	class HTMLParseError : public CpptubeError {};
+
+	class HTMLParseError : public CpptubeError
+	{
+	public:
+		HTMLParseError() = default;
+		HTMLParseError(const std::string& error_msg);
+	};
+
 	class ExtractError : public CpptubeError {};
 
 	class RegexMatchError : public ExtractError
@@ -31,7 +41,7 @@ namespace cpptube::exceptions
 	{
 	public:
 		std::string video_id;
-		VideoUnavailableError() = default;
+		VideoUnavailableError();
 		VideoUnavailableError(const std::string& video_id);
 	};
 
