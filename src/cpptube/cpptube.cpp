@@ -111,15 +111,15 @@ namespace cpptube
 
 		nlohmann::json stream_manifest = cpptube::extract::apply_descrambler(this->streaming_data());
 
-		try {
+		// try {
 			cpptube::extract::apply_signature(&stream_manifest, this->vid_info(), this->js());
-		} catch (cpptube::exceptions::ExtractError&) {
-			this->__js.clear();
-			this->__js_url.clear();
-			cpptube::__js__.clear();
-			cpptube::__js_url__.clear();
-			cpptube::extract::apply_signature(&stream_manifest, this->vid_info(), this->js());
-		}
+		// } catch (cpptube::exceptions::ExtractError&) {
+		// 	this->__js.clear();
+		// 	this->__js_url.clear();
+		// 	cpptube::__js__.clear();
+		// 	cpptube::__js_url__.clear();
+		// 	cpptube::extract::apply_signature(&stream_manifest, this->vid_info(), this->js());
+		// }
 
 		for (auto& stream : stream_manifest.items())
 		{

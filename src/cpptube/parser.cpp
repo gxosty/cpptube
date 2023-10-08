@@ -103,7 +103,55 @@ namespace cpptube::parser
 		if (matches.empty())
 			throw cpptube::exceptions::HTMLParseError("No matches for regex " + *pattern);
 
-		std::cout << "pos: " << (unsigned)(matches.position() + matches.length()) << std::endl;
 		return parse_for_object_from_startpoint(html, (unsigned)(matches.position() + matches.length()));
+	}
+
+	nlohmann::json throttling_array_split(const std::string& js_array)
+	{
+		nlohmann::json results = {};
+
+		std::string curr_substring = js_array.substr(1);
+
+		std::regex comma_regex(",");
+		std::regex func_regex("function\\([^)]*\\)");
+		std::smatch match;
+
+		while (curr_substring.size() > 0)
+		{
+			if (curr_substring.rfind("function", 0) != std::string::npos)
+			{
+				std::regex_search(curr_substring, match, func_regex);
+				int match_start = (int)match.position(0);
+				int match_end = match_start + (int)match.length(0);
+
+				std::string function_text = cpptube::parser::find_object_from_startpoint(&curr_substring, match_end);
+				std::string full_function_def = curr_substring.substr(0, match_end + function_text.size());
+				results += full_function_def;
+				curr_substring = curr_substring.substr(full_function_def.size() + 1);
+			}
+			else
+			{
+				std::regex_search(curr_substring, match, comma_regex);
+
+				int match_start = 0, match_end = 0;
+
+				if (!match.empty())
+				{
+					match_start = (int)match.position(0);
+					match_end = match_start + (int)match.length(0);
+				}
+				else
+				{
+					match_start = curr_substring.size() - 1;
+					match_end = match_start + 1;
+				}
+
+				std::string curr_el = curr_substring.substr(0, match_start);
+				results += curr_el;
+				curr_substring = curr_substring.substr(match_end);
+			}
+		}
+
+		return results;
 	}
 }

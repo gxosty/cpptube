@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include <nlohmann/json.hpp>
 
 enum CPPTUBE_LOGGER_LEVEL {
 	CPPTUBE_LOGGER_LEVEL_NONE     = 0,
@@ -29,6 +30,7 @@ namespace cpptube::logger
 		void print(const double& f);
 		
 		void print(std::ostream&(*pManip)(std::ostream&));
+		void print(const nlohmann::json& jsn);
 	};
 
 	class Logger
@@ -58,4 +60,5 @@ namespace cpptube::logger
 	LogPrinter& operator<<(LogPrinter& printer, const double& d);
 
 	LogPrinter& operator<<(LogPrinter& printer, std::ostream&(*pManip)(std::ostream&));
+	LogPrinter& operator<<(LogPrinter& printer, const nlohmann::json& jsn);
 }

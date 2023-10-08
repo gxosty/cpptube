@@ -1,4 +1,5 @@
 #include <cpptube/extract.hpp>
+#include <cpptube/cipher.hpp>
 #include <cpptube/parser.hpp>
 #include <cpptube/helpers.hpp>
 #include <cpptube/exceptions.hpp>
@@ -138,11 +139,12 @@ namespace cpptube::extract
 	{
 		logger.debug() << "Applying signature" << std::endl;
 
-		cpptube::cipher::Cipher cipher(js);
+		cpptube::cipher::Cipher cipher(*js);
 
-		int i = 0;
+		int i = -1;
 		for (auto& stream : stream_manifest->items())
 		{
+			i++;
 			std::string url;
 			try {
 				url = stream.value()["url"].get<std::string>();
@@ -177,17 +179,20 @@ namespace cpptube::extract
 				query_params[item.key()] = item.value()[0].get<std::string>();
 			}
 
-			query_params["sig"] = signature
+			query_params["sig"] = signature;
 
 			if (!query_params.contains("ratebypass"))
 			{
-				std::string initial_n = quest_params["n"].get<std::string>();
+				std::string initial_n = query_params["n"].get<std::string>();
 				std::string new_n = cipher.calculate_n(initial_n);
-				quest_params["n"] = new_n;
+				query_params["n"] = new_n;
 			}
 
 			url.erase(std::find(url.begin(), url.end(), '?') + 1, url.end());
 			url = url + cpptube::helpers::url_encode(query_params);
+
+			// 403 Forbidden fix
+			stream.value()["url"] = url;
 		}
 	}
 }

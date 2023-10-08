@@ -82,6 +82,12 @@ namespace cpptube::logger
 			std::cout << *pManip;
 	}
 
+	void LogPrinter::print(const nlohmann::json& jsn)
+	{
+		if (this->__is_enabled)
+			std::cout << jsn;
+	}
+
 	unsigned Logger::level = CPPTUBE_LOGGER_LEVEL_NONE;
 
 	void Logger::set_level(unsigned llevel)
@@ -160,6 +166,12 @@ namespace cpptube::logger
 	LogPrinter& operator<<(LogPrinter& printer, std::ostream&(*pManip)(std::ostream&))
 	{
 		printer.print(pManip);
+		return printer;
+	}
+
+	LogPrinter& operator<<(LogPrinter& printer, const nlohmann::json& jsn)
+	{
+		printer.print(jsn);
 		return printer;
 	}
 }

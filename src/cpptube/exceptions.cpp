@@ -11,6 +11,8 @@ namespace cpptube::exceptions
 
 	HTMLParseError::HTMLParseError(const std::string& error_msg) : CpptubeError(error_msg) {};
 
+	ExtractError::ExtractError(const std::string& error_msg) : CpptubeError(error_msg) {};
+
 	RegexMatchError::RegexMatchError(const std::string& caller, const std::string& pattern)
 	{
 		this->error_msg = caller + ": couldn't find match for " + pattern;

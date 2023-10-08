@@ -25,9 +25,14 @@ namespace cpptube::exceptions
 		HTMLParseError(const std::string& error_msg);
 	};
 
-	class ExtractError : public CpptubeError {};
+	class ExtractError : public CpptubeError
+	{
+		public:
+			ExtractError() = default;
+			ExtractError(const std::string& error_msg);
+	};
 
-	class RegexMatchError : public ExtractError
+	class RegexMatchError : public CpptubeError
 	{
 	public:
 		std::string caller;
