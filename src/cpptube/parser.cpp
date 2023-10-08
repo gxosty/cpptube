@@ -1,5 +1,6 @@
 #include <cpptube/parser.hpp>
 #include <cpptube/exceptions.hpp>
+#include <cpptube/logger.hpp>
 
 #include <iostream>
 #include <regex>
@@ -9,6 +10,8 @@
 
 namespace cpptube::parser
 {
+	cpptube::logger::Logger logger(__FILE__);
+
 	std::string find_object_from_startpoint(const std::string* html, unsigned start_point)
 	{
 		if ((*html)[start_point] != '{')
@@ -108,6 +111,7 @@ namespace cpptube::parser
 
 	nlohmann::json throttling_array_split(const std::string& js_array)
 	{
+		logger.debug() << "Getting through `throttling_array_split`" << std::endl;
 		nlohmann::json results = {};
 
 		std::string curr_substring = js_array.substr(1);
@@ -151,6 +155,8 @@ namespace cpptube::parser
 				curr_substring = curr_substring.substr(match_end);
 			}
 		}
+
+		logger.debug() << "Done `throttling_array_split`" << std::endl;
 
 		return results;
 	}

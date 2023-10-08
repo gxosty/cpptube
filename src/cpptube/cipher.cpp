@@ -25,6 +25,7 @@ namespace cpptube::cipher
 		}
 
 		std::string var = matches[0].str().substr(0, matches.length(0) - 1);
+		logger.debug() << "Var: " << var << std::endl;
 		this->__transform_map = get_transform_map(js, var);
 		this->__throttling_plan = get_throttling_plan(js);		
 		this->__throttling_array = get_throttling_function_array(js);
@@ -229,18 +230,18 @@ namespace cpptube::cipher
 	{
 		static const int function_patterns_size = 12;
 		static const std::string function_patterns[] = {
-			"\\b[cs]\\s*&&\\s*[adf]\\.set\\([^,]+\\s*,\\s*encodeURIComponent\\s*\\(\\s*(?:[a-zA-Z0-9$]+)\\(",
-			"\\b[a-zA-Z0-9]+\\s*&&\\s*[a-zA-Z0-9]+\\.set\\([^,]+\\s*,\\s*encodeURIComponent\\s*\\(\\s*(?:[a-zA-Z0-9$]+)\\(",
-			"(?:\\b|[^a-zA-Z0-9$])(?:[a-zA-Z0-9$]{2})\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)",
-			"(?:[a-zA-Z0-9$]+)\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)",
-			"([\"\'])signature\1\\s*,\\s*(?:[a-zA-Z0-9$]+)\\(",
-			"\\.sig\\|\\|(?:[a-zA-Z0-9$]+)\\(",
+			"([a-zA-Z0-9$]+)\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)",
+			"\\b[cs]\\s*&&\\s*[adf]\\.set\\([^,]+\\s*,\\s*encodeURIComponent\\s*\\(\\s*([a-zA-Z0-9$]+)\\(",
+			"\\b[a-zA-Z0-9]+\\s*&&\\s*[a-zA-Z0-9]+\\.set\\([^,]+\\s*,\\s*encodeURIComponent\\s*\\(\\s*([a-zA-Z0-9$]+)\\(",
+			"(?:\\b|[^a-zA-Z0-9$])([a-zA-Z0-9$]{2})\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)",
+			"([\"\'])signature\1\\s*,\\s*([a-zA-Z0-9$]+)\\(",
+			"\\.sig\\|\\|([a-zA-Z0-9$]+)\\(",
 			"yt\\.akamaized\\.net/\\)\\s*\\|\\|\\s*.*?\\s*[cs]\\s*&&\\s*[adf]\\.set\\([^,]+\\s*,\\s*(?:encodeURIComponent\\s*\\()?\\s*(?:[a-zA-Z0-9$]+)\\(",
-			"\\b[cs]\\s*&&\\s*[adf]\\.set\\([^,]+\\s*,\\s*(?:[a-zA-Z0-9$]+)\\(",
-			"\\b[a-zA-Z0-9]+\\s*&&\\s*[a-zA-Z0-9]+\\.set\\([^,]+\\s*,\\s*(?:[a-zA-Z0-9$]+)\\(",
-			"\\bc\\s*&&\\s*a\\.set\\([^,]+\\s*,\\s*\\([^)]*\\)\\s*\\(\\s*(?:[a-zA-Z0-9$]+)\\(",
-			"\\bc\\s*&&\\s*[a-zA-Z0-9]+\\.set\\([^,]+\\s*,\\s*\\([^)]*\\)\\s*\\(\\s*(?:[a-zA-Z0-9$]+)\\(",
-			"\\bc\\s*&&\\s*[a-zA-Z0-9]+\\.set\\([^,]+\\s*,\\s*\\([^)]*\\)\\s*\\(\\s*(?:[a-zA-Z0-9$]+)\\(",
+			"\\b[cs]\\s*&&\\s*[adf]\\.set\\([^,]+\\s*,\\s*([a-zA-Z0-9$]+)\\(",
+			"\\b[a-zA-Z0-9]+\\s*&&\\s*[a-zA-Z0-9]+\\.set\\([^,]+\\s*,\\s*([a-zA-Z0-9$]+)\\(",
+			"\\bc\\s*&&\\s*a\\.set\\([^,]+\\s*,\\s*\\([^)]*\\)\\s*\\(\\s*([a-zA-Z0-9$]+)\\(",
+			"\\bc\\s*&&\\s*[a-zA-Z0-9]+\\.set\\([^,]+\\s*,\\s*\\([^)]*\\)\\s*\\(\\s*([a-zA-Z0-9$]+)\\(",
+			"\\bc\\s*&&\\s*[a-zA-Z0-9]+\\.set\\([^,]+\\s*,\\s*\\([^)]*\\)\\s*\\(\\s*([a-zA-Z0-9$]+)\\(",
 		};
 
 		logger.debug() << "Finding initial function name" << std::endl;
@@ -255,6 +256,7 @@ namespace cpptube::cipher
 			if (!matches.empty())
 			{
 				logger.debug() << "Finished regex search, matched: " << function_patterns[i] << std::endl;
+				logger.debug() << "Initial function name: " << matches[1].str() << std::endl;
 				return matches[1].str();
 			}
 		}
@@ -302,6 +304,7 @@ namespace cpptube::cipher
 	{
 		logger.debug() << "Getting transform map" << std::endl;
 		nlohmann::json transform_object = cpptube::cipher::get_transform_object(js, var);
+		logger.debug() << "transform_object: " << transform_object << std::endl;
 		nlohmann::json mapper = {};
 
 		for (auto& obj : transform_object.items())
@@ -346,13 +349,14 @@ namespace cpptube::cipher
 				if (!idx.empty())
 				{
 					idx = idx.substr(1, idx.size() - 2); // stripping "[]"
+					logger.debug() << "Finding index" << std::endl;
+					logger.debug() << "Trying pattern: " << "var " + cpptube::helpers::escape_for_regex(matches[1].str()) + "\\s*=\\s*(\\[.+?\\]);" << std::endl;
 					std::regex pattern2("var " + cpptube::helpers::escape_for_regex(matches[1].str()) + "\\s*=\\s*(\\[.+?\\]);");
-					std::smatch matches2;
 					std::regex_search(js, matches, pattern2);
 
-					if (!matches2.empty())
+					if (!matches.empty())
 					{
-						std::string idx2 = matches2[1].str();
+						std::string idx2 = matches[1].str();
 						idx2 = idx2.substr(1, idx2.size() - 2);
 						nlohmann::json arr = cpptube::helpers::split_string(idx2, ",");
 						nlohmann::json arr2 = {};
@@ -377,9 +381,10 @@ namespace cpptube::cipher
 
 	std::string get_throttling_function_code(const std::string& js)
 	{
-		logger.debug() << "Getting throttling funciton code" << std::endl;
+		logger.debug() << "Getting throttling function code" << std::endl;
 
 		std::string name = cpptube::helpers::escape_for_regex(cpptube::cipher::get_throttling_function_name(js));
+		logger.debug() << "Function code regex: " << name + "=function\\(\\w\\)" << std::endl;
 		std::regex pattern(name + "=function\\(\\w\\)");
 		std::smatch matches;
 		std::regex_search(js, matches, pattern);
@@ -387,7 +392,7 @@ namespace cpptube::cipher
 		nlohmann::json code_lines_list = cpptube::helpers::split_string(
 			cpptube::parser::find_object_from_startpoint(
 				&js,
-				(matches.position(1) + matches.length(1))
+				(matches.position(0) + matches.length(0))
 			),
 			"\n"
 		);
@@ -404,13 +409,14 @@ namespace cpptube::cipher
 
 	nlohmann::json get_throttling_function_array(const std::string& js)
 	{
+		logger.debug() << "Getting throttling function array" << std::endl;
 		std::string raw_code = cpptube::cipher::get_throttling_function_code(js);
 
 		std::regex array_start_pattern(",c=\\[");
 		std::smatch matches;
 		std::regex_search(raw_code, matches, array_start_pattern);
 
-		std::string array_raw = cpptube::parser::find_object_from_startpoint(&raw_code, (matches.position(1) + matches.length(1) - 1));
+		std::string array_raw = cpptube::parser::find_object_from_startpoint(&raw_code, (matches.position(0) + matches.length(0) - 1));
 		nlohmann::json str_array = cpptube::parser::throttling_array_split(array_raw);
 
 		nlohmann::json converted_array = {};
@@ -452,8 +458,10 @@ namespace cpptube::cipher
 
 				bool found = false;
 
+				// logger.debug() << "`el` starts with \"function\"";
 				for (auto& pattern_fn : mapper)
 				{
+					// logger.debug() << "Trying pattern: " << pattern_fn.first << std::endl;
 					std::regex pattern(pattern_fn.first);
 					std::smatch match;
 					if (std::regex_search(el, match, pattern))
@@ -475,11 +483,11 @@ namespace cpptube::cipher
 		logger.debug() << "Getting throttling plan" << std::endl;
 
 		std::string raw_code = cpptube::cipher::get_throttling_function_code(js);
-		static const std::regex plan_pattern("try{");
+		static const std::regex plan_pattern("try\\{");
 		std::smatch match;
 		std::regex_search(raw_code, match, plan_pattern);
 
-		std::string transform_plan_raw = cpptube::parser::find_object_from_startpoint(&raw_code, (match.position(1) + match.length(1) - 1));
+		std::string transform_plan_raw = cpptube::parser::find_object_from_startpoint(&raw_code, (match.position(0) + match.length(0) - 1));
 
 		static const std::string step_start_pattern = "c\\[(\\d+)\\]\\(c\\[(\\d+)\\](,c(\\[(\\d+)\\]))?\\)";
 
@@ -694,15 +702,13 @@ namespace cpptube::cipher
 
 	CPPTUBE_TRANSFORM_FUNCTIONS map_functions(const std::string& js_func)
 	{
-		logger.debug() << "Mapping transform functions" << std::endl;
+		logger.debug() << "Mapping transform function" << std::endl;
 		static const std::vector<std::pair<std::string, CPPTUBE_TRANSFORM_FUNCTIONS>> mapper = {
 			{"\\{\\w\\.reverse\\(\\)\\}", CPPTUBE_TRANSFORM_FUNCTION_REVERSE},
 			{"\\{\\w\\.splice\\(0,\\w\\)\\}", CPPTUBE_TRANSFORM_FUNCTION_SPLICE},
 			{"\\{var\\s\\w=\\w\\[0\\];\\w\\[0\\]=\\w\\[\\w\\%\\w\\.length\\];\\w\\[\\w\\]=\\w\\}", CPPTUBE_TRANSFORM_FUNCTION_SWAP},
 			{"\\{var\\s\\w=\\w\\[0\\];\\w\\[0\\]=\\w\\[\\w\\%\\w\\.length\\];\\w\\[\\w\\%\\w\\.length\\]=\\w\\}", CPPTUBE_TRANSFORM_FUNCTION_SWAP},
 		};
-
-		logger.debug() << js_func << std::endl;
 
 		for (auto& pattern_fn : mapper)
 		{

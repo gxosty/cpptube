@@ -1,5 +1,6 @@
 #include <cpptube/helpers.hpp>
 #include <cpptube/exceptions.hpp>
+#include <cpptube/logger.hpp>
 #include <curl/curl.h>
 
 #include <regex>
@@ -8,6 +9,8 @@
 
 namespace cpptube::helpers
 {
+	cpptube::logger::Logger logger(__FILE__);
+
 	std::string regex_search(const std::string& pattern, const std::string& str, int group)
 	{
 		std::regex regex_pattern(pattern);
@@ -17,6 +20,8 @@ namespace cpptube::helpers
 
 		if (matches.empty())
 			throw cpptube::exceptions::RegexMatchError("helpers", pattern);
+
+		logger.debug() << "Matched regex search: " << pattern << std::endl;
 
 		return matches[group].str();
 	}
