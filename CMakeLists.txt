@@ -23,6 +23,7 @@ add_library(${CPPTUBE_SHARED_LIB_NAME} SHARED
 	src/cpptube/extract.cpp
 	src/cpptube/parser.cpp
 	src/cpptube/helpers.cpp
+	src/cpptube/itags.cpp
 	src/cpptube/innertube.cpp
 	src/cpptube/exceptions.cpp
 	src/cpptube/logger.cpp

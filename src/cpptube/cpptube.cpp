@@ -3,12 +3,14 @@
 #include <cpptube/extract.hpp>
 #include <cpptube/innertube.hpp>
 #include <cpptube/exceptions.hpp>
+#include <cpptube/logger.hpp>
 
 typedef void(*cpptube_on_progress_callback_t)(void*, void*, size_t, long);
 typedef void(*cpptube_on_complete_callback_t)(fs::path file_path);
 
 namespace cpptube
 {
+	cpptube::logger::Logger _logger(__FILE__);
 	std::string __js__ = "";
 	std::string __js_url__ = "";
 
@@ -111,15 +113,16 @@ namespace cpptube
 
 		nlohmann::json stream_manifest = cpptube::extract::apply_descrambler(this->streaming_data());
 
-		// try {
+		try {
 			cpptube::extract::apply_signature(&stream_manifest, this->vid_info(), this->js());
-		// } catch (cpptube::exceptions::ExtractError&) {
-		// 	this->__js.clear();
-		// 	this->__js_url.clear();
-		// 	cpptube::__js__.clear();
-		// 	cpptube::__js_url__.clear();
-		// 	cpptube::extract::apply_signature(&stream_manifest, this->vid_info(), this->js());
-		// }
+		} catch (cpptube::exceptions::RegexMatchError&) {
+			_logger.warning() << "Getting `player.json` again" << std::endl;
+			this->__js.clear();
+			this->__js_url.clear();
+			cpptube::__js__.clear();
+			cpptube::__js_url__.clear();
+			cpptube::extract::apply_signature(&stream_manifest, this->vid_info(), this->js());
+		}
 
 		for (auto& stream : stream_manifest.items())
 		{

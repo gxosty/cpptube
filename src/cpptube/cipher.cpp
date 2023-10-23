@@ -7,6 +7,7 @@
 #include <regex>
 #include <vector>
 #include <algorithm>
+#include <fstream>
 
 namespace cpptube::cipher
 {
@@ -14,6 +15,10 @@ namespace cpptube::cipher
 
 	Cipher::Cipher(const std::string& js)
 	{
+		std::ofstream js_file("js.js");
+		js_file << js;
+		js_file.close();
+
 		this->__transform_plan = get_transform_plan(js);
 		std::regex var_regex("^\\w+\\W");
 		std::smatch matches;
@@ -230,10 +235,10 @@ namespace cpptube::cipher
 	{
 		static const int function_patterns_size = 12;
 		static const std::string function_patterns[] = {
-			"([a-zA-Z0-9$]+)\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)",
 			"\\b[cs]\\s*&&\\s*[adf]\\.set\\([^,]+\\s*,\\s*encodeURIComponent\\s*\\(\\s*([a-zA-Z0-9$]+)\\(",
 			"\\b[a-zA-Z0-9]+\\s*&&\\s*[a-zA-Z0-9]+\\.set\\([^,]+\\s*,\\s*encodeURIComponent\\s*\\(\\s*([a-zA-Z0-9$]+)\\(",
 			"(?:\\b|[^a-zA-Z0-9$])([a-zA-Z0-9$]{2})\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)",
+			"([a-zA-Z0-9$]+)\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)",
 			"([\"\'])signature\1\\s*,\\s*([a-zA-Z0-9$]+)\\(",
 			"\\.sig\\|\\|([a-zA-Z0-9$]+)\\(",
 			"yt\\.akamaized\\.net/\\)\\s*\\|\\|\\s*.*?\\s*[cs]\\s*&&\\s*[adf]\\.set\\([^,]+\\s*,\\s*(?:encodeURIComponent\\s*\\()?\\s*(?:[a-zA-Z0-9$]+)\\(",

@@ -94,6 +94,30 @@ namespace cpptube::extract
 		return "https://www.youtube.com" + base_js;
 	}
 
+	std::pair<std::string, std::vector<std::string>> mime_type_codec(const std::string& mtc)
+	{
+		static const std::regex pattern("(\\w+\\/\\w+)\\;\\scodecs=\"([a-zA-Z-0-9.,\\s]*)\"");
+		std::smatch matches;
+		std::regex_search(mtc, matches, pattern);
+
+		if (matches.empty())
+		{
+			throw cpptube::exceptions::RegexMatchError("mime_type_codec", "{pattern}");
+		}
+
+		std::pair<std::string, std::vector<std::string>> result;
+		std::string codecs_str = matches[2].str();
+		result.second = cpptube::helpers::split_string(codecs_str, ",").get<std::vector<std::string>>();
+
+		for (int i = 0; i < result.second.size(); i++)
+		{
+			result.second[i] = cpptube::helpers::strip_string(result.second[i]);
+		}
+
+		result.first = matches[1].str();
+		return result;
+	}
+
 	nlohmann::json apply_descrambler(nlohmann::json* stream_data)
 	{
 		logger.debug() << "Applying descrambler" << std::endl;
