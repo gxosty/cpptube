@@ -9,6 +9,9 @@
 #include <string>
 #include <vector>
 
+typedef void(*cpptube_on_progress_callback_t)(void*, void*, size_t, long);
+typedef void(*cpptube_on_complete_callback_t)(fs::path file_path);
+
 namespace cpptube
 {
 	extern std::string __js__;

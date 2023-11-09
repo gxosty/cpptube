@@ -28,6 +28,7 @@ namespace cpptube::query
 		std::vector<cpptube::streams::Stream*> filter(const nlohmann::json& filter_list);
 
 		cpptube::streams::Stream* first();
+		cpptube::streams::Stream* get_by_itag(int itag);
 
 		size_t size();
 	};

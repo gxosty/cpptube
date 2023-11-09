@@ -5,9 +5,6 @@
 #include <cpptube/exceptions.hpp>
 #include <cpptube/logger.hpp>
 
-typedef void(*cpptube_on_progress_callback_t)(void*, void*, size_t, long);
-typedef void(*cpptube_on_complete_callback_t)(fs::path file_path);
-
 namespace cpptube
 {
 	cpptube::logger::Logger _logger(__FILE__);

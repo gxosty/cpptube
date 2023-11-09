@@ -1,9 +1,11 @@
 #pragma once
 
+#include <cpptube/definitions.hpp>
 #include <cpptube/monostate.hpp>
 #include <nlohmann/json.hpp>
 
 #include <string>
+#include <fstream>
 #include <vector>
 
 namespace cpptube::streams
@@ -30,7 +32,11 @@ namespace cpptube::streams
 		bool __is_hdr;
 		bool __is_live;
 
-		cpptube::monostate::Monostate* __stream_monostate;		
+		cpptube::monostate::Monostate* __stream_monostate;
+
+		// Internal use only!
+		std::ofstream* __file;
+		unsigned __bytes_remaining;
 
 	public:
 		Stream(const nlohmann::json& stream, cpptube::monostate::Monostate* stream_monostate);
@@ -58,5 +64,23 @@ namespace cpptube::streams
 		bool is_live();
 
 		cpptube::monostate::Monostate* get_stream_monostate();
+
+		std::string* title();
+
+		std::string default_filename();
+		std::string make_filename(std::string filename);
+
+		fs::path download(
+			std::string filename = "",
+			bool skip_existing = true,
+			int timeout = 0,
+			int max_retries = 0,
+			bool continue_download = false
+		);
+
+		bool exists_at_path(fs::path filepath);
+
+		void on_progress(void* ptr, size_t size, long bytes_remaining);
+		void on_complete(fs::path filepath);
 	};
 }

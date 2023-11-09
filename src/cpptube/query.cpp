@@ -210,12 +210,19 @@ namespace cpptube::query
 			__filter(&streams_list, callback);
 		}
 
+		#undef FILTER_CALLBACK
+
 		return streams_list;
 	}
 
 	cpptube::streams::Stream* StreamQuery::first()
 	{
-		return &(*this->fmt_streams)[0];
+		return this->fmt_streams->data();
+	}
+
+	cpptube::streams::Stream* StreamQuery::get_by_itag(int itag)
+	{
+		return this->itag_index[itag];
 	}
 
 	size_t StreamQuery::size()

@@ -43,6 +43,21 @@ namespace cpptube::helpers
 		return res;
 	}
 
+	std::string safe_filename(std::string s, int max_length)
+	{
+		static std::string pattern_str = R"(["\#\$\%'\*\,\.\/\:\;\<\>\?\\\^\|\~])"; // AAaaa
+		static std::regex pattern(pattern_str);
+
+		s = std::regex_replace(s, pattern, "_");
+
+		if (s.size() > max_length)
+		{
+			s = s.substr(0, max_length);
+		}
+
+		return s;
+	}
+
 	std::string url_encode(const std::string& str)
 	{
 		char* encoded_str = curl_escape(str.c_str(), str.size());

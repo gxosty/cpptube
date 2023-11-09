@@ -21,7 +21,9 @@ namespace cpptube::request
 		nlohmann::json headers = {},
 		const std::string* data = nullptr,
 		long timeout = 10,
-		long retries = 3
+		long retries = 3,
+
+		std::string* response_headers = nullptr
 	);
 
 	std::string execute_request(
@@ -30,8 +32,12 @@ namespace cpptube::request
 		nlohmann::json headers = {},
 		const std::string* data = nullptr,
 		long timeout = 10,
-		long retries = 3
+		long retries = 3,
+
+		std::string* response_headers = nullptr
 	);
 
 	std::string get(const std::string& url, nlohmann::json headers = {}, long timeout = 10);
+
+	int filesize(const std::string& url);
 }
