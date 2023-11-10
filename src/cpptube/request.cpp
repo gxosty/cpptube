@@ -1,4 +1,5 @@
 #include <cpptube/request.hpp>
+#include <cpptube/helpers.hpp>
 #include <cpptube/logger.hpp>
 #include <curl/curl.h>
 
@@ -20,9 +21,11 @@ namespace cpptube::request
 		if ((curle_code != CURLE_OK) || ((status_code < 200) || (status_code >= 300)))
 		{
 			logger.warning() << "Request wasn't successful" << std::endl;
-			logger.warning() << "CURLcode == " << (int)curle_code << std::endl;
-			logger.warning() << "status_code == " << status_code << std::endl;
 		}
+
+		logger.info() << "CURLcode == " << (int)curle_code << std::endl;
+		logger.info() << "status_code == " << status_code << std::endl;
+
 		return curle_code != CURLE_OK;
 	}
 
@@ -33,12 +36,39 @@ namespace cpptube::request
 		return full_size;
 	}
 
-	// size_t __headers_write_function(void* data, size_t size, size_t nmemb, void* userp)
-	// {
-	// 	size = size * nmemb;
-	// 	((std::string*)userp)->append((char*)data, size);
-	// 	return size;
-	// }
+	size_t __headers_write_function(void* data, size_t size, size_t nmemb, void* userp)
+	{
+		size = size * nmemb;
+		nlohmann::json* headers = (nlohmann::json*)userp;
+		std::string header = std::string((char*)data, size);
+
+		if (!header.empty())
+		{
+			auto found = header.find(": ");
+
+			if (found != std::string::npos)
+			{
+				std::string header_value;
+
+				if (header.find("\r\n") != std::string::npos)
+				{
+					header_value = header.substr(found + 2, header.size() - found - 2 - 2);
+				}
+				else if (header.find("\n") != std::string::npos)
+				{
+					header_value = header.substr(found + 2, header.size() - found - 2 - 1);
+				}
+				else
+				{
+					header_value = header.substr(found + 2, header.size() - found - 2);
+				}
+
+				(*headers)[header.substr(0, found)] = header_value;
+			}
+		}
+
+		return size;
+	}
 
 	std::string __dns_over_https(const std::string& domain_name)
 	{
@@ -66,18 +96,31 @@ namespace cpptube::request
 
 		std::string result;
 		curl_easy_setopt(__curl_dns, CURLOPT_FOLLOWLOCATION, 1LL);
+		curl_easy_setopt(__curl_dns, CURLOPT_SSL_VERIFYPEER, 0LL);
+		curl_easy_setopt(__curl_dns, CURLOPT_SSL_VERIFYHOST, 0LL);
 		curl_easy_setopt(__curl_dns, CURLOPT_WRITEFUNCTION, __write_function);
 		curl_easy_setopt(__curl_dns, CURLOPT_WRITEDATA, (void*)&result);
 
+		std::string resolve_string = "www.google.com:443:" + dns_resolver.second;
+		logger.debug() << "Resolver: " << resolve_string << std::endl;
+
 		struct curl_slist* _resolve_data = nullptr;
-		_resolve_data = curl_slist_append(_resolve_data, ("www.google.com:443:" + dns_resolver.second).c_str());
-		curl_easy_setopt(__curl_dns, CURLOPT_RESOLVE, _resolve_data);
+		_resolve_data = curl_slist_append(_resolve_data, resolve_string.c_str());
+		if (curl_easy_setopt(__curl_dns, CURLOPT_RESOLVE, _resolve_data) != CURLE_OK)
+		{
+			logger.error() << "Unknown option: CURLOPT_RESOLVE" << std::endl;
+			curl_easy_reset(__curl_dns);
+			return "";
+		}
+		curl_easy_setopt(__curl_dns, CURLOPT_DNS_USE_GLOBAL_CACHE, false);
 
 		struct curl_slist* _headers = nullptr;
 
+		std::string host = "Host: " + dns_resolver.first;
+
 		_headers = curl_slist_append(_headers, "accept-language: en-US,en");
 		_headers = curl_slist_append(_headers, "User-Agent: Mozilla/5.0");
-		_headers = curl_slist_append(_headers, ("Host: " + dns_resolver.first).c_str());
+		_headers = curl_slist_append(_headers, host.c_str());
 
 		curl_easy_setopt(__curl_dns, CURLOPT_URL, url.c_str());
 		curl_easy_setopt(__curl_dns, CURLOPT_HTTPHEADER, _headers);
@@ -94,12 +137,13 @@ namespace cpptube::request
 
 		if (result.empty())
 		{
+			curl_easy_reset(__curl_dns);
 			return "";
 		}
 
 		nlohmann::json json_data = nlohmann::json::parse(result);
 
-		std::string ip = "";
+		std::string ip = domain_name;
 		bool search = true;
 
 		while (search)
@@ -108,7 +152,7 @@ namespace cpptube::request
 
 			for (auto& item : json_data["Answer"].items())
 			{
-				if (ip == item.value()["name"].get<std::string>())
+				if (item.value()["name"].get<std::string>().find(ip) != std::string::npos)
 				{
 					ip = item.value()["data"].get<std::string>();
 					search = true;
@@ -116,6 +160,7 @@ namespace cpptube::request
 			}
 		}
 
+		curl_easy_reset(__curl_dns);
 		logger.debug() << "Host -> IP: " << domain_name << " -> " << ip << std::endl;
 		__dns_mutex.unlock();
 
@@ -124,7 +169,7 @@ namespace cpptube::request
 
 	void __domain_front(CURL* curl, std::string& url, struct curl_slist* headers)
 	{
-		static const std::regex redirector_pattern("^https://([a-z0-9\\-\\.]+?\\.googlevideo\\.com)(/.+)");
+		static const std::regex redirector_pattern("^https://([a-z0-9\\-\\.]+?\\.googlevideo\\.com)");
 		static const std::regex youtube_pattern("(?:[a-z]*?\\.)?youtube\\.com");
 
 		if (url.find("googlevideo.com") != std::string::npos)
@@ -137,12 +182,14 @@ namespace cpptube::request
 				const std::string& domain_name = matches[1].str();
 
 				std::string ip = __dns_over_https(domain_name);
+				std::string resolve_string = domain_name + ":443:" + ip;
 				struct curl_slist* _resolve_data = nullptr;
-				_resolve_data = curl_slist_append(_resolve_data, (domain_name + ":443:" + ip).c_str());
+				_resolve_data = curl_slist_append(_resolve_data, resolve_string.c_str());
 
-				headers = curl_slist_append(headers, ("Host: " + domain_name).c_str());
-				url = std::regex_replace(url, redirector_pattern, "www.google.com");
+				// headers = curl_slist_append(headers, ("Host: " + domain_name).c_str());
+				// url = std::regex_replace(url, redirector_pattern, "https://www.google.com");
 				curl_easy_setopt(__curl, CURLOPT_RESOLVE, _resolve_data);
+				curl_easy_setopt(__curl, CURLOPT_DNS_USE_GLOBAL_CACHE, false);
 			}
 
 		}
@@ -163,7 +210,7 @@ namespace cpptube::request
 		long timeout,
 		long retries,
 
-		std::string* response_headers
+		nlohmann::json* response_headers
 	) {
 		__request_mutex.lock();
 		if (__curl == nullptr)
@@ -217,7 +264,7 @@ namespace cpptube::request
 
 		if (response_headers != nullptr)
 		{
-			curl_easy_setopt(__curl, CURLOPT_HEADERFUNCTION, __write_function);
+			curl_easy_setopt(__curl, CURLOPT_HEADERFUNCTION, __headers_write_function);
 			curl_easy_setopt(__curl, CURLOPT_HEADERDATA, (void*)response_headers);
 		}
 
@@ -242,11 +289,31 @@ namespace cpptube::request
 		long timeout,
 		long retries,
 
-		std::string* response_headers
+		nlohmann::json* response_headers
 	) {
 		std::string response_data;
 		__execute_request(__write_function, (void*)&response_data, url, method, headers, data, timeout, retries, response_headers);
 		return response_data;
+	}
+
+	void stream(
+		size_t(*callback)(void* buffer, size_t size_n, size_t n, void* stream_p),
+		void* stream_p,
+		const std::string& url,
+		long timeout,
+		long max_retries,
+		unsigned start_byte_position
+	) {
+		__execute_request(
+			callback,
+			stream_p,
+			url + (start_byte_position == 0 ? "" : "&range=" + std::to_string(start_byte_position) + "-99999999999"),
+			METHOD_GET,
+			{},
+			nullptr,
+			timeout,
+			max_retries
+		);
 	}
 
 	std::string get(const std::string& url, nlohmann::json headers, long timeout)
@@ -256,11 +323,17 @@ namespace cpptube::request
 		return response_data;
 	}
 
+	nlohmann::json head(const std::string& url, nlohmann::json headers, long timeout)
+	{
+		nlohmann::json _headers;
+		__execute_request(nullptr, nullptr, url, METHOD_HEAD, headers, nullptr, timeout, 3, &_headers);
+		// logger.debug() << _headers << std::endl;
+		return _headers;
+	}
+
 	int filesize(const std::string& url)
 	{
-		std::string headers;
-		__execute_request(nullptr, nullptr, url, METHOD_HEAD, {}, nullptr, 10, 3, &headers);
-		logger.debug() << headers << std::endl;
-		return 0;
+		nlohmann::json headers = head(url);
+		return std::stoi(headers["Content-Length"].get<std::string>());
 	}
 }

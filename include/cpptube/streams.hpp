@@ -73,14 +73,14 @@ namespace cpptube::streams
 		fs::path download(
 			std::string filename = "",
 			bool skip_existing = true,
-			int timeout = 0,
+			int timeout = 0, // downloading will stop after this time even if downloading is going
 			int max_retries = 0,
 			bool continue_download = false
 		);
 
 		bool exists_at_path(fs::path filepath);
 
-		void on_progress(void* ptr, size_t size, long bytes_remaining);
-		void on_complete(fs::path filepath);
+		void on_progress(void* ptr, size_t size);
+		void on_complete(const fs::path& filepath);
 	};
 }

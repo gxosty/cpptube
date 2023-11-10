@@ -64,6 +64,12 @@ namespace cpptube::logger
 			std::cout << i;
 	}
 
+	void LogPrinter::print(const unsigned& u)
+	{
+		if (this->__is_enabled)
+			std::cout << u;
+	}
+
 	void LogPrinter::print(const float& f)
 	{
 		if (this->__is_enabled)
@@ -148,6 +154,12 @@ namespace cpptube::logger
 	LogPrinter& operator<<(LogPrinter& printer, const int& i)
 	{
 		printer.print(i);
+		return printer;
+	}
+
+	LogPrinter& operator<<(LogPrinter& printer, const unsigned& u)
+	{
+		printer.print(u);
 		return printer;
 	}
 

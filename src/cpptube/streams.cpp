@@ -14,8 +14,7 @@ namespace cpptube::streams
 	size_t __stream_download(void* buffer, size_t size_n, size_t n, void* stream_p)
 	{
 		size_t size = size_n * n;
-		Stream* stream = reinterpret_cast<Stream*>(stream_p);
-		stream->on_progress(buffer, size, 0);
+		reinterpret_cast<Stream*>(stream_p)->on_progress(buffer, size);
 		return size;
 	}
 
@@ -253,25 +252,39 @@ namespace cpptube::streams
 			return filepath;
 		}
 
+		unsigned start_byte_position = 0;
+		this->__bytes_remaining = this->filesize();
+
+		if (continue_download)
+		{
+			if (fs::exists(filepath))
+			{
+				start_byte_position = fs::file_size(filepath);
+				this->__bytes_remaining -= start_byte_position;
+			}
+			else
+			{
+				logger.warning() << "`continue_download` flag is set, but file " << filepath.string() << " doesn't exist, ignoring flag..." << std::endl;
+				continue_download = false;
+			}
+		}
+
 		logger.debug() << "Downloading file to: " << filepath.string() << std::endl;
 
-		this->__file = new std::ofstream(filepath);
+		this->__file = new std::ofstream(filepath, (continue_download ? std::fstream::out | std::fstream::app : std::fstream::out));
 
 		if (!this->__file->is_open())
 		{
 			throw std::runtime_error("Couldn't open a file: " + filename);
 		}
 
-		this->__bytes_remaining = this->filesize();
-		cpptube::request::__execute_request(
+		cpptube::request::stream(
 			__stream_download,
 			(void*)this,
 			this->__url,
-			METHOD_GET,
-			{},
-			nullptr,
 			timeout,
-			max_retries
+			max_retries,
+			start_byte_position
 		);
 
 		this->__file->close();
@@ -286,13 +299,26 @@ namespace cpptube::streams
 		return fs::exists(filepath) && ((int)fs::file_size(filepath) == this->filesize());
 	}
 
-	void Stream::on_progress(void* ptr, size_t size, long bytes_remaining)
+	void Stream::on_progress(void* ptr, size_t size)
 	{
+		this->__bytes_remaining -= size;
+		this->__file->write((char*)ptr, size);
 
+		logger.debug() << "Download Remaining: " << this->__bytes_remaining << std::endl;
+
+		if (this->__stream_monostate->on_progress_callback != nullptr)
+		{
+			this->__stream_monostate->on_progress_callback(this, ptr, size, this->__bytes_remaining);
+		}
 	}
 
-	void Stream::on_complete(fs::path filepath)
+	void Stream::on_complete(const fs::path& filepath)
 	{
+		logger.debug() << "Download Finished!" << std::endl;
 
+		if (this->__stream_monostate->on_complete_callback != nullptr)
+		{
+			this->__stream_monostate->on_complete_callback(filepath);
+		}
 	}
 }

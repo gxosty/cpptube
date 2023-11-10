@@ -16,14 +16,16 @@ int main(int argc, char** argv)
 {
 	cpptube::set_logger_level(CPPTUBE_LOGGER_LEVEL_INFO | CPPTUBE_LOGGER_LEVEL_DEBUG | CPPTUBE_LOGGER_LEVEL_WARNING | CPPTUBE_LOGGER_LEVEL_ERROR);
 	
-	// cpptube::YouTube yt("https://youtube.com/watch?v=9bZkp7q19f0");
-	// cpptube::query::StreamQuery streams = yt.streams();
+	cpptube::YouTube yt("https://www.youtube.com/watch?v=jNQXAC9IVRw");
+	cpptube::query::StreamQuery streams = yt.streams();
 
-	// cpptube::streams::Stream* stream = streams.get_by_itag(18);
+	cpptube::streams::Stream* stream = streams.get_by_itag(18);
 
-	// stream->download();
+	stream->download("", false, 0, 0, true);
 
-	cpptube::request::filesize("https://www.google.com");
+	// std::cout << cpptube::request::filesize("https://www.google.com") << std::endl;
+
+	// std::cout << cpptube::request::__dns_over_https("www.youtube.com") << std::endl;
 
 	return 0;
 }

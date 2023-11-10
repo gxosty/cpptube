@@ -26,6 +26,7 @@ namespace cpptube::logger
 		void print(const std::string& str);
 		void print(const char* str);
 		void print(const int& i);
+		void print(const unsigned& u);
 		void print(const float& f);
 		void print(const double& f);
 		
@@ -56,6 +57,7 @@ namespace cpptube::logger
 	LogPrinter& operator<<(LogPrinter& printer, const std::string& str);
 	LogPrinter& operator<<(LogPrinter& printer, const char* str);
 	LogPrinter& operator<<(LogPrinter& printer, const int& i);
+	LogPrinter& operator<<(LogPrinter& printer, const unsigned& u);
 	LogPrinter& operator<<(LogPrinter& printer, const float& f);
 	LogPrinter& operator<<(LogPrinter& printer, const double& d);
 

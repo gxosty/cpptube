@@ -239,7 +239,7 @@ namespace cpptube::cipher
 			"\\b[a-zA-Z0-9]+\\s*&&\\s*[a-zA-Z0-9]+\\.set\\([^,]+\\s*,\\s*encodeURIComponent\\s*\\(\\s*([a-zA-Z0-9$]+)\\(",
 			"(?:\\b|[^a-zA-Z0-9$])([a-zA-Z0-9$]{2})\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)",
 			"([a-zA-Z0-9$]+)\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)",
-			"([\"\'])signature\1\\s*,\\s*([a-zA-Z0-9$]+)\\(",
+			"([\"\'])signature\\1\\s*,\\s*([a-zA-Z0-9$]+)\\(",
 			"\\.sig\\|\\|([a-zA-Z0-9$]+)\\(",
 			"yt\\.akamaized\\.net/\\)\\s*\\|\\|\\s*.*?\\s*[cs]\\s*&&\\s*[adf]\\.set\\([^,]+\\s*,\\s*(?:encodeURIComponent\\s*\\()?\\s*(?:[a-zA-Z0-9$]+)\\(",
 			"\\b[cs]\\s*&&\\s*[adf]\\.set\\([^,]+\\s*,\\s*([a-zA-Z0-9$]+)\\(",
@@ -282,7 +282,7 @@ namespace cpptube::cipher
 	nlohmann::json get_transform_object(const std::string& js, const std::string& var)
 	{
 		logger.debug() << "Getting transform object" << std::endl;
-		std::string pattern_str = "var " + cpptube::helpers::escape_for_regex(var) + "=\\{([\\s\\S]*?)\\};"; // there is no `re.DOTALL` equivalent in cpp
+		std::string pattern_str = "var " + cpptube::helpers::escape_for_regex(var) + "=\\{([\\s\\S\\n]*?)\\};"; // there is no `re.DOTALL` equivalent in cpp
 		logger.debug() << "Trying pattern: " << pattern_str << std::endl;
 		std::regex pattern(pattern_str);
 		std::smatch matches;
