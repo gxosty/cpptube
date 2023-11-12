@@ -4,7 +4,7 @@ namespace cpptube::exceptions
 {
 	CpptubeError::CpptubeError(const std::string& error_msg) : error_msg{error_msg} {};
 
-	const char* CpptubeError::what()
+	const char* CpptubeError::what() const noexcept
 	{
 		return this->error_msg.c_str();
 	}
@@ -62,5 +62,29 @@ namespace cpptube::exceptions
 	{
 		this->video_id = video_id;
 		this->error_msg = this->video_id + " is not available in your region";
+	}
+
+	HTTPStatusCodeError::HTTPStatusCodeError(const int& code)
+	{
+		this->code = code;
+		this->error_msg = "HTTP Status Code " + std::to_string(code) + ": ";
+
+		switch (this->code)
+		{
+		case 400:
+			this->error_msg += "Client Error";
+			break;
+		case 403:
+			this->error_msg += "Forbidden";
+			break;
+		case 404:
+			this->error_msg += "Not Found";
+			break;
+		case 500:
+			this->error_msg += "Server Error";
+			break;
+		default:
+			this->error_msg += "Undefined";
+		}
 	}
 }

@@ -2,7 +2,6 @@
 #include <cpptube/request.hpp>
 #include <cpptube/extract.hpp>
 #include <cpptube/innertube.hpp>
-#include <cpptube/exceptions.hpp>
 #include <cpptube/logger.hpp>
 
 namespace cpptube

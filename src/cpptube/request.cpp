@@ -1,5 +1,6 @@
 #include <cpptube/request.hpp>
 #include <cpptube/helpers.hpp>
+#include <cpptube/exceptions.hpp>
 #include <cpptube/logger.hpp>
 #include <curl/curl.h>
 
@@ -16,15 +17,20 @@ namespace cpptube::request
 	CURL* __curl = nullptr;
 	CURL* __curl_dns = nullptr;
 
-	bool __check_status(CURLcode curle_code, int status_code)
+	bool __check_status(CURL* curl, CURLcode curle_code, int status_code)
 	{
-		if ((curle_code != CURLE_OK) || ((status_code < 200) || (status_code >= 300)))
+		logger.info() << "CURLcode == " << (int)curle_code << std::endl;
+		logger.info() << "status_code == " << status_code << std::endl;
+
+		if ((curle_code != CURLE_OK) && (curle_code != CURLE_WRITE_ERROR))
 		{
 			logger.warning() << "Request wasn't successful" << std::endl;
 		}
-
-		logger.info() << "CURLcode == " << (int)curle_code << std::endl;
-		logger.info() << "status_code == " << status_code << std::endl;
+		else if (status_code >= 400)
+		{
+			curl_easy_reset(curl);
+			throw cpptube::exceptions::HTTPStatusCodeError(status_code);
+		}
 
 		return curle_code != CURLE_OK;
 	}
@@ -133,7 +139,7 @@ namespace cpptube::request
 			logger.debug() << "Requesting url: " << url << std::endl;
 			curle_code = curl_easy_perform(__curl_dns);
 			curl_easy_getinfo(__curl_dns, CURLINFO_RESPONSE_CODE, &status_code);
-		} while ((__check_status(curle_code, status_code)) && ((--retries) > 0));
+		} while ((__check_status(__curl_dns, curle_code, status_code)) && ((--retries) > 0));
 
 		if (result.empty())
 		{
@@ -276,7 +282,7 @@ namespace cpptube::request
 			logger.debug() << "Requesting url: " << url << std::endl;
 			curle_code = curl_easy_perform(__curl);
 			curl_easy_getinfo(__curl, CURLINFO_RESPONSE_CODE, &status_code);
-		} while ((__check_status(curle_code, status_code)) && ((--retries) > 0));
+		} while ((__check_status(__curl, curle_code, status_code)) && ((--retries) > 0));
 
 		__request_mutex.unlock();
 	}

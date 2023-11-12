@@ -4,12 +4,12 @@
 #include <cpptube/streams.hpp>
 #include <cpptube/monostate.hpp>
 #include <cpptube/query.hpp>
-#include <cpptube/logger.hpp>
+#include <cpptube/exceptions.hpp>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
 
-typedef void(*cpptube_on_progress_callback_t)(void*, void*, size_t, long);
+typedef void(*cpptube_on_progress_callback_t)(void* stream, void* buffer, size_t buffer_size, long bytes_remaining);
 typedef void(*cpptube_on_complete_callback_t)(fs::path file_path);
 
 namespace cpptube

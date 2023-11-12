@@ -14,12 +14,18 @@ namespace cpptube::streams
 	size_t __stream_download(void* buffer, size_t size_n, size_t n, void* stream_p)
 	{
 		size_t size = size_n * n;
-		reinterpret_cast<Stream*>(stream_p)->on_progress(buffer, size);
-		return size;
+		
+		if (reinterpret_cast<Stream*>(stream_p)->on_progress(buffer, size))
+		{
+			return size;
+		}
+
+		return 0;
 	}
 
 	Stream::Stream(const nlohmann::json& stream, cpptube::monostate::Monostate* stream_monostate)
 		: __stream_monostate{stream_monostate} {
+		this->__stop_signal = false;
 
 		// logger.debug() << "Stream JSON: " << stream << std::endl;
 
@@ -242,6 +248,7 @@ namespace cpptube::streams
 		int max_retries,
 		bool continue_download
 	) {
+		this->__stop_signal = false;
 		fs::path filepath(filename);
 		filepath = filepath.parent_path() / fs::path(this->make_filename(filepath.filename().string()));
 
@@ -294,12 +301,17 @@ namespace cpptube::streams
 		return filepath;
 	}
 
+	void Stream::stop_download()
+	{
+		this->__stop_signal = true;
+	}
+
 	bool Stream::exists_at_path(fs::path filepath)
 	{
 		return fs::exists(filepath) && ((int)fs::file_size(filepath) == this->filesize());
 	}
 
-	void Stream::on_progress(void* ptr, size_t size)
+	bool Stream::on_progress(void* ptr, size_t size)
 	{
 		this->__bytes_remaining -= size;
 		this->__file->write((char*)ptr, size);
@@ -310,6 +322,14 @@ namespace cpptube::streams
 		{
 			this->__stream_monostate->on_progress_callback(this, ptr, size, this->__bytes_remaining);
 		}
+
+		if (this->__stop_signal)
+		{
+			this->__stop_signal = false;
+			return false;
+		}
+
+		return true;
 	}
 
 	void Stream::on_complete(const fs::path& filepath)

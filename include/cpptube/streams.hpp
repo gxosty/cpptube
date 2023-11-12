@@ -37,6 +37,7 @@ namespace cpptube::streams
 		// Internal use only!
 		std::ofstream* __file;
 		unsigned __bytes_remaining;
+		bool __stop_signal;
 
 	public:
 		Stream(const nlohmann::json& stream, cpptube::monostate::Monostate* stream_monostate);
@@ -78,9 +79,12 @@ namespace cpptube::streams
 			bool continue_download = false
 		);
 
+		void stop_download();
+
 		bool exists_at_path(fs::path filepath);
 
-		void on_progress(void* ptr, size_t size);
+		// Internal use only
+		bool on_progress(void* ptr, size_t size);
 		void on_complete(const fs::path& filepath);
 	};
 }

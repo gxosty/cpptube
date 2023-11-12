@@ -13,7 +13,7 @@ namespace cpptube::exceptions
 		CpptubeError() = default;
 		CpptubeError(const std::string& error_msg);
 
-		const char* what();
+		const char* what() const noexcept override;
 	};
 
 	class MaxRetriesExceededError : public CpptubeError {};
@@ -84,5 +84,12 @@ namespace cpptube::exceptions
 	{
 	public:
 		VideoRegionBlockedError(const std::string& video_id);
+	};
+
+	class HTTPStatusCodeError : public CpptubeError
+	{
+	public:
+		int code;
+		HTTPStatusCodeError(const int& code);
 	};
 }
